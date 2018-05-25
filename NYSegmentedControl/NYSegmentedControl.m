@@ -95,9 +95,7 @@
     panGestureRecognizer.maximumNumberOfTouches = 1;
     [self.selectedSegmentIndicator addGestureRecognizer:panGestureRecognizer];
     
-    UITapGestureRecognizer *tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapGestureRecognized:)];
-    tapGestureRecognizer.numberOfTapsRequired = 1;
-    [self addGestureRecognizer:tapGestureRecognizer];
+
 }
 
 - (void)reloadData {
@@ -349,10 +347,17 @@
     }
 }
 
+-(void)didMoveToSuperview {
+    [super didMoveToSuperview];
+    UITapGestureRecognizer *tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapGestureRecognized:)];
+    tapGestureRecognizer.numberOfTapsRequired = 1;
+    [self.superview.superview addGestureRecognizer:tapGestureRecognizer]; // !!!!! changes may be required
+}
+
 - (void)tapGestureRecognized:(UITapGestureRecognizer *)tapGestureRecognizer {
     CGPoint location = [tapGestureRecognizer locationInView:self];
     [self.segments enumerateObjectsUsingBlock:^(NYSegment *segment, NSUInteger index, BOOL *stop) {
-        if (CGRectContainsPoint(segment.frame, location)) {
+        if (segment.frame.origin.x <= location.x && CGRectGetMaxX(segment.frame) >= location.x) { //ignore Y
             if (index != self.selectedSegmentIndex) {
                 [self setSelectedSegmentIndex:index animated:YES];
                 [self sendActionsForControlEvents:UIControlEventValueChanged];
