@@ -3,12 +3,12 @@
 #import "NYSegmentIndicator.h"
 #import "NYSegmentTextRenderView.h"
 
-@interface NYSegmentedControl ()
+@interface NYSegmentedControl () <UIGestureRecognizerDelegate>
 
 @property (nonatomic) NSArray<NYSegment *> *segments;
 @property (nonatomic) NYSegmentIndicator *selectedSegmentIndicator;
 @property (nonatomic, getter=isAnimating) BOOL animating;
-
+@property (nonatomic) UITapGestureRecognizer* tapGesture;
 - (void)moveSelectedSegmentIndicatorToSegmentAtIndex:(NSUInteger)index animated:(BOOL)animated;
 - (CGRect)indicatorFrameForSegment:(NYSegment *)segment;
 
@@ -347,17 +347,29 @@
     }
 }
 
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRequireFailureOfGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer
+{
+    // Fail to any other gesture
+    if (gestureRecognizer == self.tapGesture) {
+        return YES;
+    }
+    return NO;
+}
+
 -(void)didMoveToSuperview {
     [super didMoveToSuperview];
-    UITapGestureRecognizer *tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapGestureRecognized:)];
-    tapGestureRecognizer.numberOfTapsRequired = 1;
-    [self.superview.superview addGestureRecognizer:tapGestureRecognizer]; // !!!!! changes may be required
+    self.tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapGestureRecognized:)];
+    self.tapGesture.numberOfTapsRequired = 1;
+    self.tapGesture.delegate = self;
+    [self.superview.superview.superview addGestureRecognizer:self.tapGesture]; // !!!!! changes may be required
 }
 
 - (void)tapGestureRecognized:(UITapGestureRecognizer *)tapGestureRecognizer {
     CGPoint location = [tapGestureRecognizer locationInView:self];
     [self.segments enumerateObjectsUsingBlock:^(NYSegment *segment, NSUInteger index, BOOL *stop) {
-        if (segment.frame.origin.x <= location.x && CGRectGetMaxX(segment.frame) >= location.x) { //ignore Y
+        NSLog(@"%f %f", location.y, segment.frame.size.height);
+        if (segment.frame.origin.x <= location.x && CGRectGetMaxX(segment.frame) >= location.x &&
+            CGRectGetMaxY(segment.frame) + 10 > location.y) { // changes when lays segment in navigation bar, extend y axis
             if (index != self.selectedSegmentIndex) {
                 [self setSelectedSegmentIndex:index animated:YES];
                 [self sendActionsForControlEvents:UIControlEventValueChanged];
