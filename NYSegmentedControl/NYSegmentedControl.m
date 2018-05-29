@@ -361,13 +361,12 @@
     self.tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapGestureRecognized:)];
     self.tapGesture.numberOfTapsRequired = 1;
     self.tapGesture.delegate = self;
-    [self.superview.superview.superview addGestureRecognizer:self.tapGesture]; // !!!!! changes may be required
+    [self.superview addGestureRecognizer:self.tapGesture]; // !!!!! changes may be required
 }
 
 - (void)tapGestureRecognized:(UITapGestureRecognizer *)tapGestureRecognizer {
     CGPoint location = [tapGestureRecognizer locationInView:self];
     [self.segments enumerateObjectsUsingBlock:^(NYSegment *segment, NSUInteger index, BOOL *stop) {
-        NSLog(@"%f %f", location.y, segment.frame.size.height);
         if (segment.frame.origin.x <= location.x && CGRectGetMaxX(segment.frame) >= location.x &&
             CGRectGetMaxY(segment.frame) + 10 > location.y) { // changes when lays segment in navigation bar, extend y axis
             if (index != self.selectedSegmentIndex) {
